@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="CAGE: Controllable Articulation GEneration">
+  <meta name="keywords" content="CAGE, controllable, articulation, generation">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <title>CAGE: Controllable Articulation GEneration</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <!-- <link rel="icon" href="./static/images/favicon.svg"> -->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+
+<body>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">CAGE: Controllable Articulation GEneration</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://sevenljy.github.io/">Jiayi Liu</a>,</span>
+              <span class="author-block">
+                <a href="">Hou In Ivan Tam</a>,</span>
+              <span class="author-block">
+                <a href="https://www.sfu.ca/~amahdavi/">Ali Mahdavi-Amiri</a>,</span>
+              <span class="author-block">
+                <a href="https://msavva.github.io/">Manolis Savva</a>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Simon Fraser University</span>
+            </div>
+            <!-- <div class="is-size-5 publication-authors">
+              <span class="author-block" style="color:#efcc3e">CVPR 2024</span>
+            </div> -->
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <!-- <span class="link-block">
+                <a href=""
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span> -->
+                <span class="link-block">
+                  <a href="" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <!-- Video Link. -->
+                <span class="link-block">
+                  <a href="https://youtu.be/cH_rbKbyTpE" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                    </span>
+                    <span>Video</span>
+                  </a>
+                </span>
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href=""
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <!-- Dataset Link. -->
+                <span class="link-block">
+                <a href=""
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="far fa-images"></i>
+                  </span>
+                  <span>Data</span>
+                  </a>
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="column has-text-centered">
+        <img src="./static/images/teaser.webp" class="interpolation-image webp_img" alt="Teaser." / style="max-width: 88%;">
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              We address the challenge of generating 3D articulated objects in a controllable fashion.
+              Currently, modeling articulated 3D objects is either achieved through laborious manual authoring, 
+              or using methods from prior work that are hard to scale and control directly.
+            </p>
+            <p>
+              We leverage the interplay between part shape, connectivity, and motion using a denoising diffusion-based method with attention modules designed to extract correlations between part attributes.
+              Our method takes an object category label and a part connectivity graph as input and generates an object's geometry and motion parameters.
+              The generated objects conform to user-specified constraints on the object category, part shape, and part articulation.
+            </p>
+            <p>
+              Our experiments show that our method outperforms the state-of-the-art in articulated object generation, producing more realistic objects while conforming better to user constraints.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+
+      <!-- Paper video. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Video</h2>
+          <div class="publication-video">
+            <iframe src="https://youtu.be/cH_rbKbyTpE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+      <!--/ Paper video. -->
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        
+        <div class="column is-full-width">
+          <div class="content has-text-justified">
+            <div class="center-container">
+              <h3 class="title is-3">Methods Overview</h3>
+              <img src="./static/images/pipeline.webp" class="interpolation-image webp_img" alt="method overview" />
+            </div>
+            <p>
+              Method overview. We represents each object as a collection of part attributes. In the forward pass, Gaussian noise is iteratively added to
+              corrupt the data from x0 to random noise xT . During the reverse process, our denoiser (in yellow highlight) predicts the residual noise to
+              be subtracted from the input data xt at timestep t conditioned on the category label c and a graph adjacency G as an attention mask injected
+              in the Graph Relation Attention module. All the timesteps share the same denoiser that is built on layers of our Attribute Attention Blocks (AAB).
+
+            </p>
+            <div class="center-container">
+              <img src="./static/images/attention.webp" class="interpolation-image webp_img" alt="attention modules" style="max-width: 75%;"/>
+            </div>
+            <p>
+              Design of the attention modules within our attribute attention blocks (AAB). 
+              Each node in the input graph is represented by 5 attributes describing part shape and motion parameters.
+              Each node attribute is projected to a separate token and sequentially passed to three attention modules
+              with varied masking strategies. 
+              White cells signify activated attention positions, whereas grey cells indicate attention that has been
+              masked out. 
+            <!-- </p>
+               Local attention captures the relationship of attributes within the part itself. The mask only activates attention among attributes within the same node.
+               Global attention captures relationships among nodes regardless of topological distance in the graph. This allows for attention between pairs of attributes across all valid nodes.
+               The graph relation attention focuses on the relationship between attributes among parent and children nodes. Here we leverage the input graph by explicitly masking the attention using the graph adjacency matrix.
+            </p> -->
+          </div>
+          
+          <!-- Methods. -->
+
+          <!-- Results. -->
+          <div class="content has-text-justified">
+            <div class="center-container">
+              <h3 class="title is-3">Results</h3>
+            </div>
+            <h4 class="title is-4">Graph Conditional Generation</h4>
+            <img src="./static/images/cond_graph.png" class="interpolation-image" alt="cond_graph"/>
+            <p>
+              Here we show qualitative examples of generated objects conditioned on graphs of varied complexity.
+              Our generated objects respect the node hierarchy with parts better matching the input graph as denoted by the color.
+              In comparison, prior work (<a href="https://arxiv.org/pdf/2305.16315.pdf">NAP</a>) fails to conform to the input graph with inconsistent part assignments and flipped or disordered connections between parts, denoted using <span style="color: #FF506A;">red</span>  arrows.
+            </p>
+            <h4 class="title is-4">OOD Graph Conditional Generation</h4>
+            <div class="center-container">
+              <img src="./static/images/ood.webp" class="interpolation-image webp_img" alt="ood_graph" style="max-width: 90%"/>
+            </div>
+            <p>
+              Our method can be conditioned on graphs that are out of the distribution of the training samples.
+              These results illustrate that our method can generate plausible objects even for unseen graphs with different numbers and compositions of parts.
+            </p>
+            <h4 class="title is-4">Part → Motion</h4>
+            <img src="./static/images/part2motion.webp" class="interpolation-image webp_img" alt="part2motion" />
+            <p>
+              Our method can be conditioned on specific attributes associated with the graph.
+              Here, we predict part articulation parameters given a bounding box condition for each part.
+              The output plausibly completes the object given the provided input parts.
+            </p>
+            <h4 class="title is-4">Type → Part</h4>
+            <img src="./static/images/type2part.webp" class="interpolation-image webp_img" alt="type2part" />
+            <p>
+              We show various possible completions by conditioning on specific joint types for each node in the input graph.
+            </p>
+            <h4 class="title is-4">Axis → Part</h4>
+            <img src="./static/images/axis2part.webp" class="interpolation-image webp_img" alt="axis2part" />
+            <p>
+              We show various possible completions conditioning on a specific articulation axis for each part.
+            </p>
+          </div>
+        </div>
+        <!--/ Results. -->
+
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>
+      @article{jiayi2023cage,
+          author  = {Liu, Jiayi and Tam, Hou In Ivan and Mahdavi-Amiri, Ali and Savva, Manolis},
+          title   = {{CAGE: Controllable Articulation GEneration}},
+          year    = {2023},
+          journal = journal={arXiv preprint arXiv:xxx}
+      }
+      </code></pre>
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <a class="icon-link" href="">
+          <i class="fas fa-file-pdf"></i>
+        </a>
+        <a class="icon-link" href="https://github.com/3dlg-hcvc/paris" class="external-link" disabled>
+          <i class="fab fa-github"></i>
+        </a>
+      </div>
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This website is licensed under a <a rel="license"
+                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+                Commons Attribution-ShareAlike 4.0 International License</a>.
+              The template is borrowed from <a href="https://nerfies.github.io/">Nerfies</a>.
+              Please check out their great work if you find it helpful as well.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>
