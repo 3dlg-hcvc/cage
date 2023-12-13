@@ -1,0 +1,292 @@
+import torch
+import models
+import numpy as np
+import lightning.pytorch as pl
+from diffusers import DDPMScheduler
+from utils.savermixins import SaverMixin
+from utils.refs import label_ref, joint_ref
+from utils.plot import viz_graph, make_grid, add_text
+from utils.render import rescale_axis, draw_boxes_axiss_anim, get_bbox_mesh_pair, get_axis_mesh
+
+class BaseSystem(pl.LightningModule, SaverMixin):
+    def __init__(self, hparams):
+        super().__init__()
+        self.hparams.update(hparams) 
+        self.model = models.make(hparams.model.name, hparams.model)
+        self.scheduler = DDPMScheduler(**self.hparams.scheduler.config)
+        self.save_hyperparameters()
+
+    def setup(self, stage: str):
+        self.set_save_dir(stage) # config the logger dir for images
+    
+    def configure_optimizers(self):
+        raise NotImplementedError
+    
+    def training_step(self, batch, batch_idx):
+        raise NotImplementedError
+    
+    def validation_step(self, batch, batch_idx):
+        raise NotImplementedError
+    
+    def predict_step(self, batch, batch_idx, dataloader_idx=None):
+        raise NotImplementedError
+    
+    # ------------------------------- data converters ------------------------------- #
+    def convert_data_range(self, x):
+        x = x.reshape(-1, 30) # (K, 30)
+        aabb_max = self.convert_format(x[:, 0:3])
+        aabb_min = self.convert_format(x[:, 3:6])
+        center = (aabb_max + aabb_min) / 2.
+        size = (aabb_max - aabb_min).clip(min=1e-3)
+        
+        j_type = torch.mean(x[:, 6:12], dim=1)
+        j_type = self.convert_format((j_type+0.5) * 5).clip(min=1., max=5.).round()
+
+        axis_d = self.convert_format(x[:, 12:15])
+        axis_d = axis_d / np.linalg.norm(axis_d, axis=1, keepdims=True)
+        axis_o = self.convert_format(x[:, 15:18])
+
+        j_range = (x[:, 18:20] + x[:, 20:22] + x[:, 22:24]) / 3
+        j_range = self.convert_format(j_range).clip(min=-1., max=1.)
+        j_range[:, 0] = j_range[:, 0] * 360
+        j_range[:, 1] = j_range[:, 1]
+
+        label = torch.mean(x[:, 24:30], dim=1)
+        label = self.convert_format((label+0.8) * 5).clip(min=0., max=7.).round()
+        return {
+            'center': center,
+            'size': size,
+            'type': j_type,
+            'axis_d': axis_d,
+            'axis_o': axis_o,
+            'range': j_range,
+            'label': label
+        }
+    
+    def convert_json_graph_only(self, c, idx):
+        out = {'diffuse_tree': []}
+        n_nodes = c['n_nodes'][idx].item()
+        par = c['parents'][idx].cpu().numpy().tolist()
+        adj = c['adj'][idx].cpu().numpy()
+        np.fill_diagonal(adj, 0)
+
+        for i in range(n_nodes):
+            node = {'id': i}
+            node['parent'] = par[i]
+            node['children'] = [child for child in np.where(adj[i] == 1)[0] if child != par[i]]
+            out['diffuse_tree'].append(node)
+        return out
+
+    def convert_json(self, x, c, idx):
+        n_nodes = c['n_nodes'][idx].item()
+        par = c['parents'][idx].cpu().numpy().tolist()
+        adj = c['adj'][idx].cpu().numpy()
+        np.fill_diagonal(adj, 0)
+
+        # convert the data to original range
+        data = self.convert_data_range(x)
+        # convert to json format
+        out = {'diffuse_tree': []}
+        out['meta'] = {
+            'obj_cat': c['obj_cat'][idx], 
+            'tree_hash': c['tree_hash'][idx]  
+        }
+        for i in range(n_nodes):
+            node = {'id': i}
+            node['name'] = label_ref['bwd'][int(data['label'][i].item())]
+            node['parent'] = par[i]
+            node['children'] = [child for child in np.where(adj[i] == 1)[0] if child != par[i]]
+            node['aabb'] = {}
+            node['aabb']['center'] = data['center'][i].tolist()
+            node['aabb']['size'] = data['size'][i].tolist()
+            node['joint'] = {}
+            node['joint']['type'] = joint_ref['bwd'][int(data['type'][i].item())]
+            if node['joint']['type'] == 'fixed':
+                node['joint']['range'] = [0., 0.]
+            elif node['joint']['type'] == 'revolute':
+                node['joint']['range'] = [0., data['range'][i][0]]
+            elif node['joint']['type'] == 'continuous':
+                node['joint']['range'] = [0., 360.]
+            elif node['joint']['type'] == 'prismatic' or node['joint']['type'] == 'screw':
+                node['joint']['range'] = [0., data['range'][i][1]]
+            node['joint']['range'] = data['range'][i].tolist()
+            node['joint']['axis'] = {}
+            # relocate the axis to visualize well
+            axis_o, axis_d = rescale_axis(int(data['type'][i].item()), data['axis_d'][i], data['axis_o'][i], data['center'][i])
+            node['joint']['axis']['direction'] = axis_d
+            node['joint']['axis']['origin'] = axis_o
+
+            out['diffuse_tree'].append(node)
+        return out
+
+    # ------------------------------- visualizations ------------------------------- #
+    def prepare_meshes(self, info_dict):
+        '''
+        Function to prepare the bbox and axis meshes for visualization
+
+        Args:
+        - info_dict (dict): output json containing the graph information
+        '''
+        tree = info_dict['diffuse_tree']
+        bbox_0, bbox_1, axiss, labels, jtypes = [], [], [], [], []
+        root_id = 0
+        # get root id
+        for node in tree:
+            if node['parent'] == -1:
+                root_id = node['id']        
+        for node in tree:
+            # retrieve info
+            box_cen = np.array(node['aabb']['center'])
+            box_size = np.array(node['aabb']['size'])
+            jrange = node['joint']['range']
+            jtype = node['joint']['type']
+            axis_d = np.array(node['joint']['axis']['direction'])
+            axis_o = np.array(node['joint']['axis']['origin'])
+            label = label_ref['fwd'][node['name']]
+            jtype_id = joint_ref['fwd'][node['joint']['type']]
+            # construct meshes for bbox
+            if node['id'] == root_id or node['parent'] == root_id: # no transform
+                bb_0, bb_1 = get_bbox_mesh_pair(box_cen, box_size, jtype=jtype_id, jrange=jrange, axis_d=axis_d, axis_o=axis_o)
+            else:
+                parent_id = node['parent']
+                jrange_p = tree[parent_id]['joint']['range']
+                jtype_p = tree[parent_id]['joint']['type']
+                jtype_p_id = joint_ref['fwd'][jtype_p]
+                axis_d_p = np.array(tree[parent_id]['joint']['axis']['direction'])
+                axis_o_p = np.array(tree[parent_id]['joint']['axis']['origin'])
+                bb_0, bb_1 = get_bbox_mesh_pair(box_cen, box_size, jtype=jtype_p_id, jrange=jrange_p, axis_d=axis_d_p, axis_o=axis_o_p)
+            # construct mesh for axis (the axis is not supporting transform for now)
+            axis = get_axis_mesh(axis_d, axis_o, box_cen, jtype)
+            # append
+            bbox_0.append(bb_0)
+            bbox_1.append(bb_1)
+            axiss.append(axis)
+            labels.append(label)
+            jtypes.append(jtype_id)
+
+        return {
+            'bbox_0': bbox_0,
+            'bbox_1': bbox_1,
+            'axiss': axiss,
+            'labels': labels,
+            'jtypes': jtypes
+        }
+
+    def save_val_img(self, pred, gt, cond):
+        B = pred.shape[0]
+        pred_imgs, gt_imgs, gt_graphs = [], [], []
+        for b in range(B):
+            # convert to humnan readable format json
+            pred_json = self.convert_json(pred[b], cond, b)
+            gt_json = self.convert_json(gt[b], cond, b)
+            # visualize bbox and axis
+            pred_meshes = self.prepare_meshes(pred_json)
+            bbox_0, bbox_1, axiss = pred_meshes['bbox_0'], pred_meshes['bbox_1'], pred_meshes['axiss']
+            pred_img = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+            gt_meshes = self.prepare_meshes(gt_json)
+            bbox_0, bbox_1, axiss = gt_meshes['bbox_0'], gt_meshes['bbox_1'], gt_meshes['axiss']
+            gt_img = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+            # visualize graph
+            gt_graph = viz_graph(gt_json)
+            gt_graph = add_text(cond['name'][b], gt_graph)
+
+            pred_imgs.append(pred_img)
+            gt_imgs.append(gt_img)
+            gt_graphs.append(gt_graph)
+        
+        # save images for generated results
+        epoch = str(self.current_epoch).zfill(5)
+        pred_thumbnails = np.concatenate(pred_imgs, axis=1) # concat batch in width
+        self.save_rgb_image(f'{epoch}_pred.png', pred_thumbnails)
+        # save images for ground truth
+        gt_thumbnails = np.concatenate(gt_imgs, axis=1) # concat batch in width
+        gt_graph_imgs = np.concatenate(gt_graphs, axis=1)
+        gt_grid = np.concatenate([gt_graph_imgs, gt_thumbnails], axis=0)
+        self.save_rgb_image(f'{epoch}_gt.png', gt_grid)
+
+    def save_pred_uncond(self, pred, gt, batch_idx):
+        epoch = self.trainer.current_epoch
+        _, cond = gt
+        B = pred.shape[0]
+        offset = batch_idx * B
+
+        for b in range(B):
+            # convert to human readable format json
+            pred_json = self.convert_json(pred[b], cond, b)
+            img_graph = viz_graph(pred_json)
+            # visualize bbox and axis
+            meshes = self.prepare_meshes(pred_json)
+            bbox_0, bbox_1, axiss= meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+            # save
+            self.save_json(f'uncond/{epoch}/#{b+offset}.json', pred_json)
+            self.save_rgb_image(f'uncond/{epoch}/#{b+offset}_graph.png', img_graph)
+            self.save_rgb_image(f'uncond/{epoch}/#{b+offset}_thumbnail.png', thumbnail)
+    
+    def save_pred_cond_graph(self, pred, gt):
+        epoch = self.trainer.current_epoch
+        mode = self.hparams.datamodule.pred_mode
+        x, c = gt
+        cat = c['obj_cat'][0]
+        hashcode = c['tree_hash'][0]
+        thumbnails = []
+        B = pred.shape[0]
+
+        if mode == 'ood':
+            gt_json = self.convert_json_graph_only(c, 0)
+        else:
+            gt_json = self.convert_json(x[0], c, 0)
+        gt_graph = viz_graph(gt_json)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}.png', gt_graph)
+        self.save_json(f'{mode}/{epoch}/{cat}/{hashcode}.json', gt_json)
+
+        for b in range(B):
+            # convert to human readable format json
+            pred_json = self.convert_json(pred[b], c, 0)
+            # visualize bbox and axis
+            meshes = self.prepare_meshes(pred_json)
+            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+
+            self.save_json(f'{mode}/{epoch}/{cat}/{hashcode}/#{b}.json', pred_json)
+            self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}/#{b}_thumbnail.png', thumbnail)
+            
+            thumbnails.append(thumbnail)
+
+        thumbnails_grid = make_grid(thumbnails, cols=5)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}_thumbnails.png', thumbnails_grid)
+
+    def save_pred_cond_attr(self, pred, gt):
+        epoch = self.trainer.current_epoch
+        mode = self.hparams.datamodule.pred_mode
+        x, c = gt
+        cat = c['obj_cat'][0]
+        hashcode = c['tree_hash'][0]
+        model_name = c['name'][0].split('/')[-1]
+        thumbnails = []
+
+        B = pred.shape[0]
+
+        gt_json = self.convert_json(x[0], c, 0)
+        meshes = self.prepare_meshes(gt_json)
+        bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
+        img_gt = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+        self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/gt_object.png', img_gt)
+        self.save_json(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/gt.json', gt_json)
+
+        for b in range(B):
+            # pred
+            pred_json = self.convert_json(pred[b], c, 0)
+            meshes = self.prepare_meshes(pred_json)
+            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            # save
+            thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+            # concat the thumbnails
+            self.save_json(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}.json', pred_json)
+            self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}_thumbnail.png', thumbnail)
+            
+            thumbnails.append(thumbnail)
+
+        
+        thumbnail_grid = make_grid(thumbnails, cols=5)
+        self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/thumbnails.png', thumbnail_grid)

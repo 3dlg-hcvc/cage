@@ -1,0 +1,57 @@
+name: cage
+version: demo
+root: /localhome/jla861/Documents/projects/gen-ao
+source: data
+
+system:
+  name: cage
+  K: 32 # the maximum number of parts in each object
+
+  datamodule:
+    name: cage 
+    root: ${root}/${source}
+    split_file: indexes/data_split.json
+    augment: true
+    K: ${system.K}
+    batch_size: 64
+    hash_table: indexes/hash_table.json # for pred mode
+    pred_mode: cond_graph # cond_graph, cond_axis, cond_box, cond_type, ood, uncond
+    pred_n_samples: 20 # the number of samples to generate for each condition
+    
+  model:
+    name: denoiser
+    in_ch: 6
+    attn_dim: 128
+    n_head: 8
+    n_layers: 12
+    dropout: 0.1
+    K: ${system.K}
+
+  scheduler:
+    name: ddpm
+    config:
+      num_train_timesteps: 1000
+      beta_schedule: linear
+      prediction_type: epsilon
+
+  optimizer:
+    name: AdamW
+    args:
+      lr: 5e-4
+      betas: [0.9, 0.99]
+      eps: 1.e-15
+
+checkpoint:
+  save_top_k: -1
+  every_n_epochs: 5000
+  save_last: true
+
+trainer:
+  fast_dev_run: false
+  max_epochs: 5000
+  log_every_n_steps: 500
+  num_sanity_val_steps: 0
+  limit_train_batches: 1.0
+  limit_val_batches: 1
+  check_val_every_n_epoch: 1000
+  precision: 32-true
