@@ -17,7 +17,7 @@ class BaseDataset(Dataset):
         data_root = self.hparams.root
         files = []
         for model_id in self.model_ids:
-            path = os.path.join(data_root, model_id, f'train_renumber.json')
+            path = os.path.join(data_root, model_id, f'train.json')
             with open(path, 'r') as f:
                 file = json.load(f)
             files.append(file)

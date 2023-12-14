@@ -82,7 +82,7 @@ class CAGESystem(BaseSystem):
 
         self.save_val_img(noisy_x, x, c) # save the image
 
-    def predict_step(self, batch, batch_idx, dataloader_idx):
+    def predict_step(self, batch, batch_idx):
         mode = self.hparams.datamodule.pred_mode
         if mode == 'uncond':
             self.pred_uncond(batch, batch_idx)

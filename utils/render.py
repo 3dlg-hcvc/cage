@@ -50,7 +50,7 @@ def rescale_axis(jtype, axis_d, axis_o, box_center):
     - axis_d (np.array): rescaled axis direction
     '''
     if jtype == 0 or jtype == 1:
-        return [0., 0., 0], [0., 0., 0]
+        return [0., 0., 0.], [0., 0., 0.]
     if jtype == 3 or jtype == 4:
         center = box_center
     else:

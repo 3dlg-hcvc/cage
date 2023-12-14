@@ -72,8 +72,8 @@ class BaseSystem(pl.LightningModule, SaverMixin):
 
         for i in range(n_nodes):
             node = {'id': i}
-            node['parent'] = par[i]
-            node['children'] = [child for child in np.where(adj[i] == 1)[0] if child != par[i]]
+            node['parent'] = int(par[i])
+            node['children'] = [intchild for child in np.where(adj[i] == 1)[0] if child != par[i]]
             out['diffuse_tree'].append(node)
         return out
 
@@ -94,8 +94,8 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         for i in range(n_nodes):
             node = {'id': i}
             node['name'] = label_ref['bwd'][int(data['label'][i].item())]
-            node['parent'] = par[i]
-            node['children'] = [child for child in np.where(adj[i] == 1)[0] if child != par[i]]
+            node['parent'] = int(par[i])
+            node['children'] = [int(child) for child in np.where(adj[i] == 1)[0] if child != par[i]]
             node['aabb'] = {}
             node['aabb']['center'] = data['center'][i].tolist()
             node['aabb']['size'] = data['size'][i].tolist()
@@ -104,12 +104,11 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             if node['joint']['type'] == 'fixed':
                 node['joint']['range'] = [0., 0.]
             elif node['joint']['type'] == 'revolute':
-                node['joint']['range'] = [0., data['range'][i][0]]
+                node['joint']['range'] = [0., float(data['range'][i][0])]
             elif node['joint']['type'] == 'continuous':
                 node['joint']['range'] = [0., 360.]
             elif node['joint']['type'] == 'prismatic' or node['joint']['type'] == 'screw':
-                node['joint']['range'] = [0., data['range'][i][1]]
-            node['joint']['range'] = data['range'][i].tolist()
+                node['joint']['range'] = [0., float(data['range'][i][1])]
             node['joint']['axis'] = {}
             # relocate the axis to visualize well
             axis_o, axis_d = rescale_axis(int(data['type'][i].item()), data['axis_d'][i], data['axis_o'][i], data['center'][i])
@@ -216,7 +215,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             img_graph = viz_graph(pred_json)
             # visualize bbox and axis
             meshes = self.prepare_meshes(pred_json)
-            bbox_0, bbox_1, axiss= meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
             thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
             # save
             self.save_json(f'uncond/{epoch}/#{b+offset}.json', pred_json)
@@ -245,7 +244,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             pred_json = self.convert_json(pred[b], c, 0)
             # visualize bbox and axis
             meshes = self.prepare_meshes(pred_json)
-            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
             thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
 
             self.save_json(f'{mode}/{epoch}/{cat}/{hashcode}/#{b}.json', pred_json)
@@ -278,7 +277,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             # pred
             pred_json = self.convert_json(pred[b], c, 0)
             meshes = self.prepare_meshes(pred_json)
-            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
             # save
             thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
             # concat the thumbnails

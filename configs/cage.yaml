@@ -11,7 +11,7 @@ system:
     split_file: indexes/data_split.json
     augment: true
     K: ${system.K}
-    batch_size: 64
+    batch_size: 8
     hash_table: indexes/hash_table.json # for pred mode
     pred_mode: cond_graph # cond_graph, cond_axis, cond_box, cond_type, ood, uncond
     pred_n_samples: 20 # the number of samples to generate for each condition
@@ -51,5 +51,5 @@ trainer:
   num_sanity_val_steps: 0
   limit_train_batches: 1.0
   limit_val_batches: 1
-  check_val_every_n_epoch: 1000
+  check_val_every_n_epoch: 1
   precision: 32-true

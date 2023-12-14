@@ -150,7 +150,6 @@ class IDPredDataset(BaseDataset):
         # record the original graph
         graph = self._build_graph(tree)
         cond['adj'] = graph['adj']
-        cond['edge_list'] = graph['edge_list']
         cond['root'] = graph['root']
         cond['parents'][:n_nodes] = graph['parents']
         cond['n_nodes'] = n_nodes
@@ -178,10 +177,10 @@ class IDPredDataset(BaseDataset):
         return data, cond
 
     def __getitem__(self, idx):
-        if self.mode == 'uncond' or self.mode == 'cond_graph':
-            data, cond = self.load_graph_cat(idx)
+        if self.hparams.pred_mode == 'uncond' or self.hparams.pred_mode == 'cond_graph':
+            data, cond = self._load_graph_cat(idx)
         else:
-            data, cond = self.load_data(idx)
+            data, cond = self._load_data(idx)
             
         return data, cond 
     

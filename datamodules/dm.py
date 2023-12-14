@@ -31,6 +31,7 @@ class CAGEDataModule(pl.LightningDataModule):
             self.pred_dataset = IDPredDataset(self.hparams, model_ids)
             self.pred_size=len(model_ids)
         elif self.hparams.pred_mode == 'cond_graph':
+            self.pred_size = 1
             hb_path = self.hparams.hash_table
             hb = json.load(open(hb_path, 'r'))
             model_ids = []
@@ -39,6 +40,7 @@ class CAGEDataModule(pl.LightningDataModule):
                     model_ids.append(hb[cat][h][0])
             self.pred_dataset = IDPredDataset(self.hparams, model_ids)
         else: # condition on node attributes
+            self.pred_size = 1
             hb_path = self.hparams.hash_table
             hb = json.load(open(hb_path, 'r'))
             model_ids = []
