@@ -13,13 +13,11 @@
 ## Setup
 We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS with a single NVIDIA A40.
 ```
-# Create an environment from the `environment.yml` file.
-
+# Create an environment from the `environment.yml` file:
 conda env create -f environment.yml
 conda activate cage
 
 # Install PyTorch3D:
-
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath
 conda install pytorch3d -c pytorch3d
 ```
