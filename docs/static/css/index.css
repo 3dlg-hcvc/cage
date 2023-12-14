@@ -27,6 +27,9 @@ body {
   font-family: 'Google Sans', sans-serif;
 }
 
+h4 {
+  margin-top: 24px;
+}
 
 .publication-title {
 }
@@ -156,9 +159,9 @@ body {
   border-radius: 5px;
 }
 
-.webp_img {
-  outline: 2px solid #fff;
-  outline-offset: -2px;
+.crop_grey_line {
+  outline: 10px solid #fff;
+  outline-offset: -8px;
 }
 
 .center-container {
