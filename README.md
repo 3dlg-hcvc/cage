@@ -28,5 +28,9 @@ Run `python main.py --config configs/cage.yaml` to train the model from the scra
 To be released. 
 
 ## Citation
+Please cite our work if you find it helpful:
+```
 
+```
 ## Acknowledgements
+This implementation is partially powered by 🤗[Diffusers](https://github.com/huggingface/diffusers).
