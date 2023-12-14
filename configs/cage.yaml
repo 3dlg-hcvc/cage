@@ -1,7 +1,5 @@
 name: cage
 version: demo
-root: /localhome/jla861/Documents/projects/gen-ao
-source: data
 
 system:
   name: cage
@@ -9,7 +7,7 @@ system:
 
   datamodule:
     name: cage 
-    root: ${root}/${source}
+    root: ../data
     split_file: indexes/data_split.json
     augment: true
     K: ${system.K}

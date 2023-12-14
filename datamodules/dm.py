@@ -23,7 +23,7 @@ class CAGEDataModule(pl.LightningDataModule):
 
     def _prepare_predict(self):
         if self.hparams.pred_mode == 'uncond':
-            # load all models in the teseting set
+            # load all models in the testing set
             split_path = self.hparams.split_file
             splits = json.load(open(split_path, 'r'))
             model_ids = splits['test']
