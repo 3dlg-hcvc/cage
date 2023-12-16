@@ -7,7 +7,7 @@ system:
 
   datamodule:
     name: cage 
-    root: ../data
+    root: data
     split_file: indexes/data_split.json
     augment: true
     K: ${system.K}

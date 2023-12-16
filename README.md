@@ -17,18 +17,16 @@ We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.ht
 conda env create -f environment.yml
 conda activate cage
 
-# Install PyTorch3D:
+# Install PyTorch3D (not required for training):
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath
 conda install pytorch3d -c pytorch3d
 ```
 ## Data
-We share the training data ([here](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)) preprocessed from [PartNet-Mobility](https://sapien.ucsd.edu/browse) dataset. Once downloaded, extract the `data` folder and the data root can be configured as `system.datamodule.root=<path/to/your/data/directory>` in `configs/cage.yaml` file.
+We share the training data ([here](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)~101MB) preprocessed from [PartNet-Mobility](https://sapien.ucsd.edu/browse) dataset. Once downloaded, extract the `data` and put directly in the project folder. The data root can be configured with `system.datamodule.root=<path/to/your/data/directory>` in `configs/cage.yaml` file.
 
 ## Training
 Run `python main.py --config configs/cage.yaml --log_dir <folder/for/logs>` to train the model from the scratch. The experiment files will be recorded at `./<log_dir>/cage/<version>`.
 
-### Pretrained Model
-To be released. 
 
 ## Citation
 Please cite our work if you find it helpful:
