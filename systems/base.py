@@ -43,7 +43,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         j_type = self.convert_format((j_type+0.5) * 5).clip(min=1., max=5.).round()
 
         axis_d = self.convert_format(x[:, 12:15])
-        axis_d = axis_d / np.linalg.norm(axis_d, axis=1, keepdims=True)
+        axis_d = axis_d / (np.linalg.norm(axis_d, axis=1, keepdims=True) + np.finfo(float).eps)
         axis_o = self.convert_format(x[:, 15:18])
 
         j_range = (x[:, 18:20] + x[:, 20:22] + x[:, 22:24]) / 3

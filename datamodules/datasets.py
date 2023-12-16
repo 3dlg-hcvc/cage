@@ -188,7 +188,6 @@ class IDPredDataset(BaseDataset):
         return len(self.model_ids)
 
 class OODPredDataset(Dataset):
-    '''not cleaned yet'''
     def __init__(self, hparams, ref_file):
         self.hparams = hparams
         ref = json.load(open(ref_file, 'r'))
