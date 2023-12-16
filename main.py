@@ -15,7 +15,7 @@ def run(config, args):
                         load_from_checkpoint=None if not args.resume_weights_only else args.ckpt)
 
 
-    logger = TensorBoardLogger(save_dir='tb_logs', name=config.name, version=config.version)
+    logger = TensorBoardLogger(save_dir=args.log_dir, name=config.name, version=config.version)
     callbacks = [ModelCheckpoint(**config.checkpoint), LearningRateMonitor(), ModelSummary(), ConfigSnapshotCallback(config)]
 
     trainer = pl.Trainer(devices='auto',
@@ -41,6 +41,7 @@ def run(config, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='configs/cage.yaml')
+    parser.add_argument('--log_dir', type=str, default='exps')
     parser.add_argument('--ckpt', default=None, help='path to the weights to be resumed')
     parser.add_argument(
             '--resume_weights_only',

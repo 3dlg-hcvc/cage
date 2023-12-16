@@ -25,7 +25,7 @@ conda install pytorch3d -c pytorch3d
 We share the training data ([here](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)) preprocessed from [PartNet-Mobility](https://sapien.ucsd.edu/browse) dataset. Once downloaded, extract the `data` folder and the data root can be configured as `system.datamodule.root=<path/to/your/data/directory>` in `configs/cage.yaml` file.
 
 ## Training
-Run `python main.py --config configs/cage.yaml` to train the model from the scratch. The experiment files will be recorded at `./tb_logs/cage/<version>`.
+Run `python main.py --config configs/cage.yaml --log_dir <folder/for/logs>` to train the model from the scratch. The experiment files will be recorded at `./<log_dir>/cage/<version>`.
 
 ### Pretrained Model
 To be released. 
