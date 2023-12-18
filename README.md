@@ -8,7 +8,7 @@
 
 <img src="docs/static/images/teaser.webp" alt="drawing" style="width:100%"/>
 
-[Page](https://3dlg-hcvc.github.io/cage/) | [Paper]() | [Data](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)
+[Page](https://3dlg-hcvc.github.io/cage/) | [Paper](https://arxiv.org/abs/2312.09570) | [Data](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)
 
 ## Setup
 We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS with a single NVIDIA A40.
@@ -32,11 +32,12 @@ Run `python main.py --config configs/cage.yaml --log_dir <folder/for/logs>` to t
 Please cite our work if you find it helpful:
 ```
 @article{liu2023cage,
-    author  = {Liu, Jiayi and Tam, Hou In Ivan and Mahdavi-Amiri, Ali and Savva, Manolis},
-    title   = {{CAGE: Controllable Articulation GEneration}},
-    year    = {2023},
-    journal = {arXiv preprint arXiv:xxx}
-}
+          author        = {Liu, Jiayi and Tam, Hou In Ivan and Mahdavi-Amiri, Ali and Savva, Manolis},
+          title         = {{CAGE: Controllable Articulation GEneration}},
+          year          = {2023},
+          eprint        = {2312.09570},
+          archivePrefix = {arXiv}
+      }
 ```
 ## Acknowledgements
 This implementation is partially powered by 🤗[Diffusers](https://github.com/huggingface/diffusers).
