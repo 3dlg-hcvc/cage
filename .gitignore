@@ -163,4 +163,4 @@ cython_debug/
 .vscode/
 
 # experiments
-tb_logs/
+exps/
