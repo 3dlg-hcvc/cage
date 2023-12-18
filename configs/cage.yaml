@@ -13,8 +13,8 @@ system:
     K: ${system.K}
     batch_size: 64
     hash_table: indexes/hash_table.json # for pred mode
-    pred_mode: cond_graph # cond_graph, cond_axis, cond_box, cond_type, ood, uncond
-    pred_n_samples: 20 # the number of samples to generate for each condition
+    pred_mode: cond_graph 
+    pred_n_samples: 10 # the number of samples to generate for each condition
     
   model:
     name: denoiser

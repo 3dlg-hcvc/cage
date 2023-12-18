@@ -254,38 +254,3 @@ class BaseSystem(pl.LightningModule, SaverMixin):
 
         thumbnails_grid = make_grid(thumbnails, cols=5)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}_thumbnails.png', thumbnails_grid)
-
-    def save_pred_cond_attr(self, pred, gt):
-        epoch = self.trainer.current_epoch
-        mode = self.hparams.datamodule.pred_mode
-        x, c = gt
-        cat = c['obj_cat'][0]
-        hashcode = c['tree_hash'][0]
-        model_name = c['name'][0].split('/')[-1]
-        thumbnails = []
-
-        B = pred.shape[0]
-
-        gt_json = self.convert_json(x[0], c, 0)
-        meshes = self.prepare_meshes(gt_json)
-        bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
-        img_gt = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
-        self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/gt_object.png', img_gt)
-        self.save_json(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/gt.json', gt_json)
-
-        for b in range(B):
-            # pred
-            pred_json = self.convert_json(pred[b], c, 0)
-            meshes = self.prepare_meshes(pred_json)
-            bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
-            # save
-            thumbnail = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
-            # concat the thumbnails
-            self.save_json(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}.json', pred_json)
-            self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}_thumbnail.png', thumbnail)
-            
-            thumbnails.append(thumbnail)
-
-        
-        thumbnail_grid = make_grid(thumbnails, cols=5)
-        self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/thumbnails.png', thumbnail_grid)

@@ -88,54 +88,8 @@ class CAGESystem(BaseSystem):
             self.pred_uncond(batch, batch_idx)
         elif mode == 'cond_graph' or mode == 'ood':
             self.pred_cond_graph(batch, batch_idx)
-        elif mode == 'cond_n_nodes':
-            raise NotImplementedError
-        elif mode.startswith('cond_'):
-            self.pred_cond_attr(batch, batch_idx)
         else:
             raise NotImplementedError(f'Unknown pred_mode: {mode}')
-    
-    def pred_cond_attr(self, batch, batch_idx):
-        x, c = batch
-        cat = c['cat']
-        key_pad_mask = c['key_pad_mask']
-        graph_mask = c['adj_mask']
-        attr_mask = c['attr_mask']
-        # set scheduler
-        n_t = 100
-        self.scheduler.set_timesteps(n_t)
-        # repeat the input for multiple samples
-        n_repeat = self.hparams.datamodule.pred_n_samples
-        x = x.repeat(n_repeat, 1, 1)
-        cat = cat.repeat(n_repeat)
-        key_pad_mask = key_pad_mask.repeat(n_repeat, 1, 1)
-        graph_mask = graph_mask.repeat(n_repeat, 1, 1)
-        attr_mask = attr_mask.repeat(n_repeat, 1, 1)
-        # masking indices
-        mode = self.hparams.datamodule.pred_mode
-        if mode == 'cond_box':
-            indices = torch.arange(0, 32*5, step=5) # 0 is box
-        elif mode == 'cond_type':
-            indices = torch.arange(1, 32*5, step=5) # 1 is type
-        elif mode == 'cond_axis':
-            indices = torch.arange(2, 32*5, step=5) # 2 is axis
-        elif mode == 'cond_axis_type':
-            indices = torch.cat([torch.arange(1, 32*5, step=5) , torch.arange(2, 32*5, step=5)], dim=0)
-        else:
-            raise NotImplementedError
-        # init the noisy input
-        noisy_x = torch.randn(x.shape, device=x.device)
-        for t in self.scheduler.timesteps:
-            noise = torch.randn(x.shape, device=x.device)
-            timesteps = torch.tensor([t], device=x.device)
-            gt_noised = self.scheduler.add_noise(x, noise, timesteps)
-            noisy_x[:, indices, :] = gt_noised[:, indices, :]
-            noise_pred = self(noisy_x, cat, timesteps, key_pad_mask, graph_mask, attr_mask)
-            noisy_x = self.scheduler.step(noise_pred, t, noisy_x).prev_sample
-        
-        masked_pred = noisy_x.clone()
-        masked_pred[:, indices, :] = x[:, indices, :]
-        self.save_pred_cond_attr(masked_pred, batch)
 
     def pred_cond_graph(self, batch, batch_idx):
         x, c = batch
