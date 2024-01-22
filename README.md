@@ -8,7 +8,7 @@
 
 <img src="docs/static/images/teaser.webp" alt="drawing" style="width:100%"/>
 
-[Page](https://3dlg-hcvc.github.io/cage/) | [Paper](https://arxiv.org/abs/2312.09570) | [Data](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)
+[Page](https://3dlg-hcvc.github.io/cage/) | [Paper](https://arxiv.org/abs/2312.09570) | [Data](https://aspis.cmpt.sfu.ca/projects/cage/data.zip) (alternative link for data: [OneDrive](https://1sfu-my.sharepoint.com/:u:/g/personal/jla861_sfu_ca/EVFoahRzu4hMpQiGi4OsDbYBU170oPAjvWa02iohyj5sTg?e=qnBra3))
 
 ## Setup
 We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS with a single NVIDIA A40.
@@ -22,7 +22,7 @@ conda install -c fvcore -c iopath -c conda-forge fvcore iopath
 conda install pytorch3d -c pytorch3d
 ```
 ## Data
-We share the training data ([here](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)~101MB) preprocessed from [PartNet-Mobility](https://sapien.ucsd.edu/browse) dataset. Once downloaded, extract the `data` and put directly in the project folder. The data root can be configured with `system.datamodule.root=<path/to/your/data/directory>` in `configs/cage.yaml` file.
+We share the training data ([here](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)~101MB) preprocessed from [PartNet-Mobility](https://sapien.ucsd.edu/browse) dataset. Once downloaded, extract the `data` and put it directly in the project folder. The data root can be configured with `system.datamodule.root=<path/to/your/data/directory>` in `configs/cage.yaml` file. If you find it slow to download the data from our server, please try this alternative link on [OneDrive](https://1sfu-my.sharepoint.com/:u:/g/personal/jla861_sfu_ca/EVFoahRzu4hMpQiGi4OsDbYBU170oPAjvWa02iohyj5sTg?e=qnBra3).
 
 ## Training
 Run `python main.py --config configs/cage.yaml --log_dir <folder/for/logs>` to train the model from the scratch. The experiment files will be recorded at `./<log_dir>/cage/<version>`.
