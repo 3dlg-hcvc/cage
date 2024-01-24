@@ -65,6 +65,7 @@ class BaseDataset(Dataset):
                 adj[node['id'], node['parent']] = 1
                 parents.append(node['parent'])
             else:
+                adj[node['id'], node['id']] = 1
                 root_id = node['id']
                 parents.append(-1)
             for child_id in node['children']:
