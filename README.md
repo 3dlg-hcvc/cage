@@ -6,6 +6,8 @@
 
 [Jiayi Liu](https://sevenljy.github.io/), [Hou In Ivan Tam](), [Ali Mahdavi-Amiri](https://www.sfu.ca/~amahdavi/), [Manolis Savva](https://msavva.github.io/)
 
+CVPR 2024
+
 <img src="docs/static/images/teaser.webp" alt="drawing" style="width:100%"/>
 
 [Page](https://3dlg-hcvc.github.io/cage/) | [Paper](https://arxiv.org/abs/2312.09570) | [Data](https://aspis.cmpt.sfu.ca/projects/cage/data.zip) (alternative link for data: [OneDrive](https://1sfu-my.sharepoint.com/:u:/g/personal/jla861_sfu_ca/EVFoahRzu4hMpQiGi4OsDbYBU170oPAjvWa02iohyj5sTg?e=qnBra3))
