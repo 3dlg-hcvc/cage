@@ -253,4 +253,4 @@ class OODPredDataset(Dataset):
         return data, cond
     
     def __len__(self):
-        return len(self.cats
+        return len(self.cats)
