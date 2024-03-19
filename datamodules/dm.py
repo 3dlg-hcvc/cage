@@ -76,7 +76,8 @@ class CAGEDataModule(pl.LightningDataModule):
         elif stage == 'predict':
             mode = self.hparams.pred_mode
             if mode == 'ood':
-                self.pred_dataset = OODPredDataset(self.hparams, 'indexes/ood_graphs.json')
+                # load out-of-distribution graphs (manually constructed)
+                self.pred_dataset = OODPredDataset(self.hparams, 'datamodules/ood_graphs.json')
                 self.pred_size = 1
             else:
                 self._prepare_predict()
