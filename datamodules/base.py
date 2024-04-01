@@ -181,6 +181,7 @@ class BaseDataset(Dataset):
         cond['name'] = self.model_ids[idx]
         cond['obj_cat'] = file['meta']['obj_cat']
         cond['tree_hash'] = file['meta']['tree_hash']
+        return data, cond
     
     def __getitem__(self, index):
         raise NotImplementedError
