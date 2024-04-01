@@ -1,6 +1,7 @@
 import torch
 import models
 import numpy as np
+from utils.refs import cat_ref
 import lightning.pytorch as pl
 from diffusers import DDPMScheduler
 from utils.savermixins import SaverMixin
@@ -254,3 +255,47 @@ class BaseSystem(pl.LightningModule, SaverMixin):
 
         thumbnails_grid = make_grid(thumbnails, cols=5)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}_thumbnails.png', thumbnails_grid)
+
+
+    def save_pred_cond_other(self, raw_pred, masked_pred, gt):
+        epoch = self.trainer.current_epoch
+        mode = self.hparams.datamodule.pred_mode
+        x, c = gt
+        cat = c['obj_cat'][0]
+        hashcode = c['tree_hash'][0]
+        model_name = c['name'][0].split('/')[-1]
+        B = raw_pred.shape[0]
+
+        # save ground truth
+        gt_json = self.convert_json(x[0], c, 0)
+        graph_viz = viz_graph(gt_json)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/gt_graph.png', graph_viz)
+        self.save_json(f'{mode}/{epoch}/{cat}/{model_name}/gt.json', gt_json)
+
+        meshes = self.prepare_meshes(gt_json)
+        bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
+        img_gt = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/gt.png', img_gt)
+
+        # save predictions
+        for b in range(B):
+            # raw data
+            raw_json = self.convert_json(raw_pred[b], c, 0)
+            meshes = self.prepare_meshes(raw_json)
+            bbox_0, bbox_1, axiss, labels, jtypes = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            # save
+            img_raw = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
+            self.save_json(f'{mode}/{epoch}/{cat}/{model_name}/#{b}_raw.json', raw_json)
+            
+            # masked data
+            masked_json = self.convert_json(masked_pred[b], c, 0)
+            meshes = self.prepare_meshes(masked_json)
+            bbox_0, bbox_1, axiss, labels, jtypes = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss'], meshes['labels'], meshes['jtypes']
+            # save
+            img_graph = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128) # color corresponding to graph nodes
+            img_semantic = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='semantic', resolution=128, types=labels) # color corresponding to semantic labels
+            img_jtype = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='jtype', resolution=128, types=jtypes) # color corresponding to joint types
+            # concat the thumbnails
+            thumb = np.concatenate([img_raw, img_graph, img_semantic, img_jtype], axis=1)
+            self.save_json(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}.json', raw_json)
+            self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}_thumbnail.png', thumb)
