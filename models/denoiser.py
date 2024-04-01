@@ -42,7 +42,7 @@ class AABModel(nn.Module):
             ]
         )
 
-        self.final_layer = FinalLayer(attn_dim, in_ch, dropout=dropout)
+        self.final_layer = FinalLayer(attn_dim, in_ch)
     
     def forward(self, x, cat, timesteps, key_padding_mask=None, graph_mask=None, attr_mask=None):
         # positional encoding for nodes and attributes
