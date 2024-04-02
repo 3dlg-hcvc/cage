@@ -1,11 +1,10 @@
 import torch
 import models
 import numpy as np
-from utils.refs import cat_ref
 import lightning.pytorch as pl
 from diffusers import DDPMScheduler
 from utils.savermixins import SaverMixin
-from utils.refs import label_ref, joint_ref
+from utils.refs import sem_ref, joint_ref
 from utils.plot import viz_graph, make_grid, add_text
 from utils.render import rescale_axis, draw_boxes_axiss_anim, get_bbox_mesh_pair, get_axis_mesh
 
@@ -94,7 +93,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         }
         for i in range(n_nodes):
             node = {'id': i}
-            node['name'] = label_ref['bwd'][int(data['label'][i].item())]
+            node['name'] = sem_ref['bwd'][int(data['label'][i].item())]
             node['parent'] = int(par[i])
             node['children'] = [int(child) for child in np.where(adj[i] == 1)[0] if child != par[i]]
             node['aabb'] = {}
@@ -142,7 +141,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             jtype = node['joint']['type']
             axis_d = np.array(node['joint']['axis']['direction'])
             axis_o = np.array(node['joint']['axis']['origin'])
-            label = label_ref['fwd'][node['name']]
+            label = sem_ref['fwd'][node['name']]
             jtype_id = joint_ref['fwd'][node['joint']['type']]
             # construct meshes for bbox
             if node['id'] == root_id or node['parent'] == root_id: # no transform
@@ -265,6 +264,8 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         model_name = c['name'][0].split('/')[-1]
         B = raw_pred.shape[0]
 
+        imgs_graph, imgs_semantic, imgs_jtype = [], [], []
+
         # save ground truth
         gt_json = self.convert_json(x[0], c, 0)
         graph_viz = viz_graph(gt_json)
@@ -297,5 +298,16 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             img_jtype = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='jtype', resolution=128, types=jtypes) # color corresponding to joint types
             # concat the thumbnails
             thumb = np.concatenate([img_raw, img_graph, img_semantic, img_jtype], axis=1)
-            self.save_json(f'{mode}/{epoch}/{cat}/{model_name}/#{b}.json', raw_json)
-            self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/#{b}_thumbnail.png', thumb)
+            self.save_json(f'{mode}/{epoch}/{cat}/{model_name}/#{b}.json', masked_json)
+            # self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/#{b}_thumbnail.png', thumb)
+
+            imgs_graph.append(img_graph)
+            imgs_semantic.append(img_semantic)
+            imgs_jtype.append(img_jtype)
+
+        img_grid_g = make_grid(imgs_graph, cols=5)
+        img_grid_s = make_grid(imgs_semantic, cols=5)
+        img_grid_j = make_grid(imgs_jtype, cols=5)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/thumbnails_graph.png', img_grid_g)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/thumbnails_semantic.png', img_grid_s)
+        self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/thumbnails_jtype.png', img_grid_j)

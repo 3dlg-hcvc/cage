@@ -52,30 +52,6 @@ joint_ref = {
     } 
 }
 
-# reference of semantic labels for each part
-label_ref = {
-    "fwd": {
-        "door": 0,
-        "drawer": 1,
-        "base": 2,
-        "handle": 3,
-        "wheel": 4,
-        "knob": 5,
-        "shelf": 6,
-        "tray": 7
-    },
-    "bwd": {
-        0: "door",
-        1: "drawer",
-        2: "base",
-        3: "handle",
-        4: "wheel",
-        5: "knob",
-        6: "shelf",
-        7: "tray"
-    }
-}
-
 
 import plotly.express as px
 # pallette for joint type color
