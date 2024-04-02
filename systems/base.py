@@ -274,15 +274,6 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         meshes = self.prepare_meshes(gt_json)
         bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
 
-        i = 0
-        for bb in bbox_0:
-            bb.export(f'temp/0/{i}.obj')
-            i += 1
-        i = 0
-        for bb in bbox_1:
-            bb.export(f'temp/1/{i}.obj')
-            i += 1
-
         img_gt = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/gt.png', img_gt)
 
