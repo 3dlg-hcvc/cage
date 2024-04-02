@@ -194,7 +194,7 @@ def get_bbox_mesh_pair(center, size, radius=0.01, jtype=None, jrange=None, axis_
     # transform
     line_box_anim = deepcopy(line_box)
     if jtype == 2: # revolute
-        theta = np.deg2rad(jrange[0])
+        theta = np.deg2rad(jrange[1])
         line_box_anim.translate(-axis_o)
         R = get_rotation_axis_angle(axis_d, theta)
         line_box_anim.rotate(R, center=(0, 0, 0))

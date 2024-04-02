@@ -74,7 +74,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         for i in range(n_nodes):
             node = {'id': i}
             node['parent'] = int(par[i])
-            node['children'] = [intchild for child in np.where(adj[i] == 1)[0] if child != par[i]]
+            node['children'] = [int(child) for child in np.where(adj[i] == 1)[0] if child != par[i]]
             out['diffuse_tree'].append(node)
         return out
 
@@ -262,7 +262,6 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         mode = self.hparams.datamodule.pred_mode
         x, c = gt
         cat = c['obj_cat'][0]
-        hashcode = c['tree_hash'][0]
         model_name = c['name'][0].split('/')[-1]
         B = raw_pred.shape[0]
 
@@ -274,6 +273,16 @@ class BaseSystem(pl.LightningModule, SaverMixin):
 
         meshes = self.prepare_meshes(gt_json)
         bbox_0, bbox_1, axiss = meshes['bbox_0'], meshes['bbox_1'], meshes['axiss']
+
+        i = 0
+        for bb in bbox_0:
+            bb.export(f'temp/0/{i}.obj')
+            i += 1
+        i = 0
+        for bb in bbox_1:
+            bb.export(f'temp/1/{i}.obj')
+            i += 1
+
         img_gt = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='graph', resolution=128)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/gt.png', img_gt)
 
@@ -297,5 +306,5 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             img_jtype = draw_boxes_axiss_anim(bbox_0, bbox_1, axiss, mode='jtype', resolution=128, types=jtypes) # color corresponding to joint types
             # concat the thumbnails
             thumb = np.concatenate([img_raw, img_graph, img_semantic, img_jtype], axis=1)
-            self.save_json(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}.json', raw_json)
-            self.save_rgb_image(f'{mode}/{epoch}/{hashcode}/{cat}/{model_name}/#{b}_thumbnail.png', thumb)
+            self.save_json(f'{mode}/{epoch}/{cat}/{model_name}/#{b}.json', raw_json)
+            self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/#{b}_thumbnail.png', thumb)
