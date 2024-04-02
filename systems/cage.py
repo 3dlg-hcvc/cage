@@ -159,6 +159,8 @@ class CAGESystem(BaseSystem):
             indices = torch.arange(1, 32*5, step=5) # 1 is type
         elif mode == 'cond_axis':
             indices = torch.arange(2, 32*5, step=5) # 2 is axis
+        elif mode == 'cond_label':
+            indices = torch.arange(4, 32*5, step=5) # 4 is semantic label
         else:
             raise NotImplementedError
         # init the noisy input

@@ -32,19 +32,19 @@ class CAGEDataModule(pl.LightningDataModule):
             self.pred_size=len(model_ids)
         elif self.hparams.pred_mode == 'cond_graph':
             self.pred_size = 1
-            hb_path = self.hparams.hash_table
+            hb_path = self.hparams.hash_table # hashtable records models corresponding to each graph topology under each category
             hb = json.load(open(hb_path, 'r'))
             model_ids = []
             for cat in hb.keys():
                 for h in hb[cat]:
-                    model_ids.append(hb[cat][h][0])
+                    model_ids.append(hb[cat][h][0]) # take one model for each graph topology as the condition
             self.pred_dataset = IDPredDataset(self.hparams, model_ids)
         else: # condition on node attributes
             self.pred_size = 1
             hb_path = self.hparams.hash_table
             hb = json.load(open(hb_path, 'r'))
             model_ids = []
-            n_examples = 8
+            n_examples = 5 # load the first 8 models for each graph topology as the condition
             for cat in hb.keys():
                 for h in hb[cat]:
                     if len(hb[cat][h]) < n_examples:
