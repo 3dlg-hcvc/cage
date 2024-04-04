@@ -67,7 +67,7 @@ class IDPredDataset(BaseDataset):
         return data, cond
 
     def __getitem__(self, idx):
-        if self.hparams.pred_mode == 'uncond' or self.hparams.pred_mode == 'cond_graph':
+        if self.hparams.pred_mode in ('uncond', 'cond_graph'):
             data, cond = self._load_graph_cat(idx)
         else: # conditional on node attributes
             data, cond = self._prepare_item(idx)
