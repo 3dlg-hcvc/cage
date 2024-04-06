@@ -1,0 +1,10 @@
+lightning
+pyrender
+open3d
+trimesh
+plotly
+matplotlib
+imageio
+omegaconf
+diffusers
+tensorboard

@@ -15,9 +15,18 @@ CVPR 2024
 ## Setup
 We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS with a single NVIDIA A40.
 ```
-# Create an environment from the `environment.yml` file:
-conda env create -f environment.yml
+# Create an conda environment
+conda env create -n cage python=3.10
 conda activate cage
+
+# Install pytorch
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+
+# Install PyGraphviz
+conda install --channel conda-forge pygraphviz
+
+# Install other packages
+pip install -r requirements.txt
 
 # Install PyTorch3D (not required for training):
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath
