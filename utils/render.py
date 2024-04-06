@@ -242,8 +242,8 @@ def get_color_from_palette(palette, idx):
     - color (np.array): color in the index of idx
     '''
     ref = palette[idx % len(palette)]
-    color = np.array([[int(i) for i in ref[4:-1].split(',')]]) / 255.
-    return color.astype(np.float32)
+    color = np.array([[int(i) for i in ref[4:-1].split(',')]], dtype=np.float32) / 255.
+    return color
 
 
 

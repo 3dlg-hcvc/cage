@@ -25,14 +25,14 @@ class CAGESystem(BaseSystem):
 
     def training_step(self, batch, batch_idx):
         x, c = batch
-        
+
         cat = c['cat']
         key_pad_mask = c['key_pad_mask']
         graph_mask = c['adj_mask']
         attr_mask = c['attr_mask']
 
         # construct loss mask
-        index_tensor = torch.arange(x.shape[1], device=x.device).unsqueeze(0) # (1, N)
+        index_tensor = torch.arange(x.shape[1], device=self.device, dtype=torch.int32).unsqueeze(0) # (1, N)
         len_nodes = c['n_nodes'] * 5 # five attributes
         mask = index_tensor < len_nodes.unsqueeze(-1)  # This uses broadcasting
         mask_padding = mask.unsqueeze(-1).expand_as(x)
@@ -47,12 +47,12 @@ class CAGESystem(BaseSystem):
         mask_padding = mask_padding.repeat(n_repeat, 1, 1) 
 
         # Sample Gaussian noise
-        noise = torch.randn(x.shape, device=x.device)
+        noise = torch.randn(x.shape, device=self.device, dtype=x.dtype)
         # Sample a random timestep for each image
         timesteps = torch.randint(
             0, self.scheduler.config.num_train_timesteps, (x.shape[0],),
-            device=x.device
-        ).long()
+            device=self.device, dtype=torch.long
+        )
         # Add Gaussian noise to the input
         noisy_x = self.scheduler.add_noise(x, noise, timesteps)
         # Predict the noise given the noisy input
@@ -74,7 +74,7 @@ class CAGESystem(BaseSystem):
         n_t = 100
         self.scheduler.set_timesteps(n_t) 
 
-        noisy_x = torch.randn(x.shape).to(x.device)
+        noisy_x = torch.randn(x.shape, device=x.device)
         for t in self.scheduler.timesteps:
             timesteps = torch.tensor([t], device=x.device)
             noise_pred = self(noisy_x, cat, timesteps, key_pad_mask, graph_mask, attr_mask)
@@ -154,26 +154,29 @@ class CAGESystem(BaseSystem):
         # masking indices
         mode = self.hparams.datamodule.pred_mode
         if mode == 'cond_box':
-            indices = torch.arange(0, 32*5, step=5) # 0 is box
+            indices = torch.arange(0, 32*5, step=5, dtype=torch.int32) # 0 is box
         elif mode == 'cond_type':
-            indices = torch.arange(1, 32*5, step=5) # 1 is type
+            indices = torch.arange(1, 32*5, step=5, dtype=torch.int32) # 1 is type
         elif mode == 'cond_axis':
-            indices = torch.arange(2, 32*5, step=5) # 2 is axis
+            indices = torch.arange(2, 32*5, step=5, dtype=torch.int32) # 2 is axis
         elif mode == 'cond_label':
-            indices = torch.arange(4, 32*5, step=5) # 4 is semantic label
+            indices = torch.arange(4, 32*5, step=5, dtype=torch.int32) # 4 is semantic label
         else:
             raise NotImplementedError
         # init the noisy input
         noisy_x = torch.randn(x.shape, device=x.device)
         # set scheduler
-        n_t = 100
+        n_t = 1000
         self.scheduler.set_timesteps(n_t)
         for t in self.scheduler.timesteps:
             # gaussian noise
             noise = torch.randn(x.shape, device=x.device)
             timesteps = torch.tensor([t], device=x.device)
-            gt_noised = self.scheduler.add_noise(x, noise, timesteps)
-            noisy_x[:, indices, :] = gt_noised[:, indices, :]
+            # Option 1: inject noised GT to the input
+            # gt_noised = self.scheduler.add_noise(x, noise, timesteps)
+            # noisy_x[:, indices, :] = gt_noised[:, indices, :]
+            # Option 2: may have better results by injecting original GT attributes 
+            noisy_x[:, indices, :] = x[:, indices, :]
             noise_pred = self(noisy_x, cat, timesteps, key_pad_mask, graph_mask, attr_mask)
             noisy_x = self.scheduler.step(noise_pred, t, noisy_x).prev_sample
         

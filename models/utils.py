@@ -5,43 +5,6 @@ from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.embeddings import CombinedTimestepLabelEmbeddings
 
 
-class PositionalEncoding(nn.Module):
-    """
-    Positional encoding module from "Attention Is All You Need"
-
-    Parameters:
-        d_model (`int`): The number of channels in the input and output.
-        dropout (`float`, *optional*, defaults to 0.0): The dropout probability to use.
-        max_len (`int`, *optional*, defaults to 5000): The maximum length of the input sequence.
-    """
-
-    def __init__(self, d_model: int, dropout: float = 0.0, max_len: int = 5000):
-        super().__init__()
-        self.dropout = nn.Dropout(p=dropout)
-
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model)
-        )
-        pe[:, 0::2] = torch.sin(position * div_term)  # type: ignore
-        pe[:, 1::2] = torch.cos(position * div_term)  # type: ignore
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer("pe", pe)
-
-    def forward(self, x: Tensor) -> Tensor:
-        r"""
-        Apply positional encoding to input tensor.
-
-        Parameters:
-            x (torch.Tensor): The input tensor of shape `(batch_size, seq_len, embed_dim)`.
-
-        Returns:
-            torch.Tensor: The encoded tensor of shape `(batch_size, seq_len, embed_dim)`.
-        """
-        x = x + self.pe[: x.size(0), : x.size(1)]
-        return self.dropout(x)
-
 class FinalLayer(nn.Module):
     def __init__(self, in_ch, out_ch=None, dropout=0.):
         super().__init__()
@@ -85,7 +48,7 @@ class PEmbeder(nn.Module):
 
     def forward(self, x, idx=None):
         if idx is None:
-            idx = torch.arange(x.shape[1], device=x.device).long()
+            idx = torch.arange(x.shape[1], device=x.device, dtype=torch.long)
         return x + self.embed(idx)
 
 
