@@ -11,7 +11,7 @@ system:
     split_file: indexes/data_split.json
     augment: true
     K: ${system.K}
-    batch_size: 128
+    batch_size: 64 # each gpu has 64 samples
     hash_table: indexes/hash_table.json # for pred mode
     pred_mode: cond_graph # cond_graph, cond_type, cond_axis, cond_box, cond_label
     pred_n_samples: 10 # the number of samples to generate for each condition
