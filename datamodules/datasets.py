@@ -137,10 +137,10 @@ class OODPredDataset(Dataset):
         adj_mask = adj_mask.repeat(5, axis=0).repeat(5, axis=1)
         cond['adj_mask'] = adj_mask.astype(np.float32)
         # attr mask
-        attr_mask = np.eye(K, K)
+        attr_mask = np.eye(K, K, dtype=np.float32)
         attr_mask = attr_mask.repeat(5, axis=0).repeat(5, axis=1)
-        cond['attr_mask'] = attr_mask.astype(np.float32)
-        data = np.zeros((K * 5, 6)).astype(np.float32)
+        cond['attr_mask'] = attr_mask
+        data = np.zeros((K * 5, 6), dtype=np.float32)
         return data, cond
     
     def __len__(self):

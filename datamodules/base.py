@@ -37,7 +37,10 @@ class BaseDataset(Dataset):
         N = len(nodes)
         order = np.random.permutation(N)
         graph_permuted = self._reorder_nodes(graph, order)
-        nodes_permuted = nodes[order, :]
+        exchange = [0] * len(order)
+        for i in range(len(order)):
+            exchange[order[i]] = i
+        nodes_permuted = nodes[exchange, :]
         return graph_permuted, nodes_permuted
 
     def _build_graph(self, nodes):
