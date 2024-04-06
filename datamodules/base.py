@@ -117,10 +117,10 @@ class BaseDataset(Dataset):
         else:
             if node['joint']['type'] == 'revolute' or node['joint']['type'] == 'continuous':
                 joint_range = np.array([node['joint']['range'][1]], dtype=np.float32) / 360. 
-                joint_range = np.concatenate([joint_range, np.zeros((1,))], axis=0) # (2,) 
+                joint_range = np.concatenate([joint_range, np.zeros((1,), dtype=np.float32)], axis=0) # (2,) 
             elif node['joint']['type'] == 'prismatic' or node['joint']['type'] == 'screw':
                 joint_range = np.array([node['joint']['range'][1]], dtype=np.float32) 
-                joint_range = np.concatenate([np.zeros((1,)), joint_range], axis=0) # (2,) 
+                joint_range = np.concatenate([np.zeros((1,), dtype=np.float32), joint_range], axis=0) # (2,) 
             axis_dir = np.array(node['joint']['axis']['direction'], dtype=np.float32) * 0.7 # (3,), range from -0.7 to 0.7
             # make sure the axis is pointing to the positive direction
             if np.sum(axis_dir > 0) < np.sum(-axis_dir > 0): 
@@ -165,19 +165,19 @@ class BaseDataset(Dataset):
         cond['n_nodes'] = n_nodes
 
         # attr mask (for Local Attention)
-        attr_mask = np.eye(K, K, dtype=np.float32)
+        attr_mask = ~np.eye(K, K, dtype=bool)
         attr_mask = attr_mask.repeat(5, axis=0).repeat(5, axis=1)
         cond['attr_mask'] = attr_mask
 
         # key padding mask (for Global Attention)
-        pad_mask = np.zeros((K*5, K*5), dtype=np.float32)
-        pad_mask[:, :n_nodes*5] = 1
-        cond['key_pad_mask'] = pad_mask.astype(np.float32)
+        pad_mask = np.ones((K*5, K*5), dtype=bool)
+        pad_mask[:, :n_nodes*5] = 0
+        cond['key_pad_mask'] = pad_mask
 
         # adj mask (for Graph Relation Attention)
-        adj_mask = cond['adj'].copy()
+        adj_mask = ~cond['adj'][:].astype(bool)
         adj_mask = adj_mask.repeat(5, axis=0).repeat(5, axis=1)
-        cond['adj_mask'] = adj_mask.astype(np.float32)
+        cond['adj_mask'] = adj_mask
 
         # axillary info
         cond['name'] = self.model_ids[idx]

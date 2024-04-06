@@ -83,13 +83,13 @@ class CAGEDataModule(pl.LightningDataModule):
                 self._prepare_predict()
                 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(self.train_dataset, batch_size=self.hparams.batch_size, num_workers=4, shuffle=True, pin_memory=True)
     
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=8, shuffle=True)
+        return DataLoader(self.val_dataset, batch_size=8, num_workers=4, shuffle=True, pin_memory=True)
     
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=len(self.train_ids), shuffle=False)
+        return DataLoader(self.test_dataset, batch_size=len(self.train_ids), num_workers=4, shuffle=False, pin_memory=True)
     
     def predict_dataloader(self):
-        return DataLoader(self.pred_dataset, batch_size=self.pred_size, shuffle=False)
+        return DataLoader(self.pred_dataset, batch_size=self.pred_size, num_workers=4, shuffle=False, pin_memory=True)

@@ -45,17 +45,17 @@ class IDPredDataset(BaseDataset):
         cond['n_nodes'] = n_nodes
 
         # key padding mask (for Global Attention)
-        pad_mask = np.zeros((K*5, K*5), dtype=np.float32)
-        pad_mask[:, :n_nodes*5] = 1
+        pad_mask = np.ones((K*5, K*5), dtype=bool)
+        pad_mask[:, :n_nodes*5] = 0
         cond['key_pad_mask'] = pad_mask
 
         # adj mask (for Graph Relation Attention)
-        adj_mask = cond['adj'].copy()
+        adj_mask = ~cond['adj'][:].astype(bool)
         adj_mask = adj_mask.repeat(5, axis=0).repeat(5, axis=1)
-        cond['adj_mask'] = adj_mask.astype(np.float32)
+        cond['adj_mask'] = adj_mask
 
         # attr mask (for Local Attention)
-        attr_mask = np.eye(K, K, dtype=np.float32)
+        attr_mask = ~np.eye(K, K, dtype=bool)
         attr_mask = attr_mask.repeat(5, axis=0).repeat(5, axis=1)
         cond['attr_mask'] = attr_mask
 
@@ -104,15 +104,15 @@ class OODPredDataset(Dataset):
         
     def get_adj(self, edges):
         K = self.hparams.K
-        adj = np.zeros((K, K))
-        adj_plot = np.zeros((K, K))
+        adj = np.zeros((K, K), dtype=np.float32)
+        adj_plot = np.zeros((K, K), dtype=np.float32)
         for edge in edges:
             adj[edge[0], edge[1]] = 1
             adj[edge[1], edge[0]] = 1
             adj_plot[edge[1], edge[0]] = 1
         adj[0][0] = 1
         adj_plot[0][0] = 1
-        return adj.astype(np.float32), adj_plot.astype(np.float32)
+        return adj, adj_plot
 
     def __getitem__(self, idx):
         K = self.hparams.K
@@ -129,15 +129,15 @@ class OODPredDataset(Dataset):
         cond['n_nodes'] = n_nodes
         cond['tree_hash'] = h
         # key padding mask
-        pad_mask = np.zeros((K*5, K*5))
-        pad_mask[:, :n_nodes*5] = 1
-        cond['key_pad_mask'] = pad_mask.astype(np.float32)
+        pad_mask = np.ones((K*5, K*5), dtype=bool)
+        pad_mask[:, :n_nodes*5] = 0
+        cond['key_pad_mask'] = pad_mask
         # adj mask
-        adj_mask = cond['adj'].copy()
+        adj_mask = ~cond['adj'][:].astype(bool)
         adj_mask = adj_mask.repeat(5, axis=0).repeat(5, axis=1)
-        cond['adj_mask'] = adj_mask.astype(np.float32)
+        cond['adj_mask'] = adj_mask
         # attr mask
-        attr_mask = np.eye(K, K, dtype=np.float32)
+        attr_mask = ~np.eye(K, K, dtype=bool)
         attr_mask = attr_mask.repeat(5, axis=0).repeat(5, axis=1)
         cond['attr_mask'] = attr_mask
         data = np.zeros((K * 5, 6), dtype=np.float32)
@@ -145,3 +145,4 @@ class OODPredDataset(Dataset):
     
     def __len__(self):
         return len(self.cats)
+
