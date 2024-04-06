@@ -13,7 +13,7 @@ CVPR 2024
 [Page](https://3dlg-hcvc.github.io/cage/) | [Paper](https://arxiv.org/abs/2312.09570) | [Data](https://aspis.cmpt.sfu.ca/projects/cage/data.zip) (alternative link for data: [OneDrive](https://1sfu-my.sharepoint.com/:u:/g/personal/jla861_sfu_ca/EVFoahRzu4hMpQiGi4OsDbYBU170oPAjvWa02iohyj5sTg?e=qnBra3))
 
 ## Setup
-We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS with a single NVIDIA A40.
+We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS.
 ```
 # Create an conda environment
 conda env create -n cage python=3.10
