@@ -79,9 +79,6 @@ def AID(requirement_dict, candidate_dict, num_states,
         
         # Compute the IoU between the two objects using the transformed bounding boxes and the part mapping
         for req_part_idx in range(num_parts_in_requirement):
-            # Skip the base part
-            if req_part_idx == requirement_base_idx:
-                continue
             
             # Get the index of the corresponding part in the candidate object
             cand_part_idx = int(part_mapping[req_part_idx, 0])
