@@ -4,7 +4,7 @@
 
 ### CAGE: Controllable Articulation GEneration
 
-[Jiayi Liu](https://sevenljy.github.io/), [Hou In Ivan Tam](), [Ali Mahdavi-Amiri](https://www.sfu.ca/~amahdavi/), [Manolis Savva](https://msavva.github.io/)
+[Jiayi Liu](https://sevenljy.github.io/), [Hou In Ivan Tam](https://iv-t.github.io/), [Ali Mahdavi-Amiri](https://www.sfu.ca/~amahdavi/), [Manolis Savva](https://msavva.github.io/)
 
 CVPR 2024
 
