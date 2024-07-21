@@ -16,7 +16,7 @@ CVPR 2024
 We recommend the use of [miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage system dependencies. The environment was tested on Ubuntu 20.04.4 LTS.
 ```
 # Create a conda environment
-conda env create -n cage python=3.10
+conda create -n cage python=3.10
 conda activate cage
 
 # Install pytorch
