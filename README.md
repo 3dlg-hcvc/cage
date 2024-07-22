@@ -45,13 +45,13 @@ Run `python main.py --config configs/cage.yaml --log_dir <folder/for/logs>` to t
 ## Citation
 Please cite our work if you find it helpful:
 ```
-@article{liu2023cage,
-          author        = {Liu, Jiayi and Tam, Hou In Ivan and Mahdavi-Amiri, Ali and Savva, Manolis},
-          title         = {{CAGE: Controllable Articulation GEneration}},
-          year          = {2023},
-          eprint        = {2312.09570},
-          archivePrefix = {arXiv}
-      }
+@inproceedings{liu2024cage,
+    title={CAGE: Controllable Articulation GEneration},
+    author={Liu, Jiayi and Tam, Hou In Ivan and Mahdavi-Amiri, Ali and Savva, Manolis},
+    booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    pages={17880--17889},
+    year={2024}
+}
 ```
 ## Acknowledgements
 This implementation is partially powered by 🤗[Diffusers](https://github.com/huggingface/diffusers).
