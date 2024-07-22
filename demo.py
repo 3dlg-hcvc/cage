@@ -15,16 +15,16 @@ from utils.callbacks import ConfigSnapshotCallback
 from retrieval.obj_retrieval import find_obj_candidates, pick_and_rescale_parts
 from utils.misc import load_config
 
-def retrieve_meshes(obj_name, save_dir):
+def retrieve_meshes(obj_name, save_dir, dataset_path="./data"):
     # Load the object spec json file
     with open(os.path.join(save_dir, f"{obj_name}.json"), "r") as f:
         obj_spec = json.load(f)
-    DATASET_PATH = "../data"
+    
     HASHBOOK_PATH = "./retrieval/retrieval_hash_no_handles.json"
     
     # Retrieve meshes for the object
-    obj_candidates = find_obj_candidates(obj_spec, DATASET_PATH, HASHBOOK_PATH, gt_file_name="train.json")
-    retrieved_mesh_specs = pick_and_rescale_parts(obj_spec, obj_candidates, DATASET_PATH, gt_file_name="train.json")
+    obj_candidates = find_obj_candidates(obj_spec, dataset_path, HASHBOOK_PATH, gt_file_name="train.json")
+    retrieved_mesh_specs = pick_and_rescale_parts(obj_spec, obj_candidates, dataset_path, gt_file_name="train.json")
 
     # ============================ Load the meshes and save them as a PLY file for each part
     mesh_dir_name = f"{obj_name}_meshes"
@@ -93,7 +93,7 @@ def main(config, args):
             if file.endswith(".json"):
                 # Retrieve the meshes for the object and save them as a PLY file
                 fname = file.split(".")[0]
-                retrieve_meshes(fname, root)
+                retrieve_meshes(fname, root, dataset_path=args.data_root)
 
 if __name__ == "__main__":
     '''
@@ -117,20 +117,25 @@ if __name__ == "__main__":
                             |-- parsed.yaml
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="exps/cage/demo/config/parsed.yaml",required=True, help="path to the config file")
-    parser.add_argument("--ckpt", default="exps/cage/demo/checkpoints/last.ckpt", required=True, help="path to the trained weights")
+    parser.add_argument("--config", type=str, default="exps/cage/demo/config/parsed.yaml", help="path to the config file")
+    parser.add_argument("--ckpt", default="exps/cage/demo/checkpoints/last.ckpt", help="path to the trained weights")
+    parser.add_argument("--data_root", default="./data", help="path to the data root directory")
     parser.add_argument("--input_graphs", default="demo_graph.json", help="path to the input graph json file")
     parser.add_argument("--pred_n_samples", type=int, default=10, help="number of samples to generate for the input graph")
 
-    pl.seed_everything(42)
     args, extras = parser.parse_known_args()
     config = load_config(args.config, cli_args=extras)
     config.cmd_args = vars(args)
 
+    assert os.path.exists(args.data_root), f"Data root directory not found: {args.data_root}"
+    assert os.path.exists(args.ckpt), f"Checkpoint file not found: {args.ckpt}"
+    assert os.path.exists(args.config), f"Config file not found: {args.config}"
+    assert os.path.exists(args.input_graphs), f"Input graph json file not found: {args.input_graphs}"
+
     # ----- Edit to the config to use the input graph json
-    config.system.datamodule.pred_mode = "ood"              # Set to "ood" prediction mode to use input graph json
+    config.system.datamodule.pred_mode = "ood"              # Set to "ood" prediction mode to take the input graph json
     config.system.datamodule.input_graphs = args.input_graphs   # Set to the path of the input graph json file
-    config.system.datamodule.root = '../data'
+    config.system.datamodule.root = args.data_root
     config.system.datamodule.pred_n_samples = args.pred_n_samples
 
     main(config, args)
