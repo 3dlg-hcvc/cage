@@ -8,3 +8,4 @@ imageio
 omegaconf
 diffusers
 tensorboard
+numpy-quaternion
