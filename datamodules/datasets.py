@@ -83,17 +83,18 @@ class OODPredDataset(Dataset):
         self.hparams = hparams
         ref = json.load(open(ref_file, 'r'))
         tree = ref['diffuse_tree']
-        self.cats, self.adjs, self.adjs_plot, self.hashes = [], [], [], []
+        self.cats, self.adjs, self.adjs_plot, self.hashes, self.parents = [], [], [], [], []
         self.num_nodes = []
         for cat in tree:
             for edges in tree[cat]:
-                adj, adj_plot = self.get_adj(edges)
+                adj, adj_plot, parents = self.get_adj(edges)
                 h, n_nodes = self.get_hashcode(edges)
                 self.hashes.append(h)
                 self.adjs.append(adj)
                 self.adjs_plot.append(adj_plot)
                 self.cats.append(cat)
                 self.num_nodes.append(n_nodes)
+                self.parents.append(parents)
     
     def get_hashcode(self, edges):
         G = nx.DiGraph()
@@ -106,13 +107,15 @@ class OODPredDataset(Dataset):
         K = self.hparams.K
         adj = np.zeros((K, K), dtype=np.float32)
         adj_plot = np.zeros((K, K), dtype=np.float32)
+        parents = [-1]
         for edge in edges:
             adj[edge[0], edge[1]] = 1
             adj[edge[1], edge[0]] = 1
             adj_plot[edge[1], edge[0]] = 1
+            parents.append(edge[0])
         adj[0][0] = 1
         adj_plot[0][0] = 1
-        return adj, adj_plot
+        return adj, adj_plot, parents
 
     def __getitem__(self, idx):
         K = self.hparams.K
@@ -126,6 +129,7 @@ class OODPredDataset(Dataset):
         cond['cat'] = cat_ref[cat]
         cond['adj'] = adj
         cond['adj_plot'] = adj_plot
+        cond['parents'] = np.array(self.parents[idx], dtype=np.int8)
         cond['n_nodes'] = n_nodes
         cond['tree_hash'] = h
         # key padding mask
