@@ -18,6 +18,7 @@ from utils.misc import load_config
 def retrieve_meshes(obj_spec, save_path):
     DATASET_PATH = "./data"
     HASHBOOK_PATH = "./retrieval/retrieval_hash_no_handles.json"
+    
     # Retrieve meshes for the object
     obj_candidates = find_obj_candidates(obj_spec, DATASET_PATH, HASHBOOK_PATH, gt_file_name="train.json")
     retrieved_mesh_specs = pick_and_rescale_parts(obj_spec, obj_candidates, DATASET_PATH, gt_file_name="train.json")
@@ -38,13 +39,10 @@ def retrieve_meshes(obj_spec, save_path):
         # Center the mesh at the origin
         part_mesh.vertices -= part_mesh.bounding_box.centroid
 
-        # Rotate the mesh 90 degrees about the z-axis if specified
-        if mesh_spec["z_rotate_90"]:
-            part_mesh.apply_transform(trimesh.transformations.rotation_matrix(np.radians(90), [0, 0, 1]))
-
-        # Scale and position the mesh
-        transform_matrix = trimesh.transformations.scale_and_translate(mesh_spec["scale_factor"], part_spec["aabb"]["center"])
-        part_mesh.apply_transform(transform_matrix)
+        transformation = trimesh.transformations.compose_matrix(scale=mesh_spec["scale_factor"], 
+                                                                angles=[0, 0, np.radians(90) if mesh_spec["z_rotate_90"] else 0], 
+                                                                translate=part_spec["aabb"]["center"])
+        part_mesh.apply_transform(transformation)
 
         # Add the mesh to the scene
         scene.add_geometry(part_mesh)
