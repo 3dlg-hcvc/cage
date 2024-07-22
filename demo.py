@@ -15,16 +15,20 @@ from utils.callbacks import ConfigSnapshotCallback
 from retrieval.obj_retrieval import find_obj_candidates, pick_and_rescale_parts
 from utils.misc import load_config
 
-def retrieve_meshes(obj_spec, save_path):
-    DATASET_PATH = "./data"
+def retrieve_meshes(obj_name, save_dir):
+    # Load the object spec json file
+    with open(os.path.join(save_dir, f"{obj_name}.json"), "r") as f:
+        obj_spec = json.load(f)
+    DATASET_PATH = "../data"
     HASHBOOK_PATH = "./retrieval/retrieval_hash_no_handles.json"
     
     # Retrieve meshes for the object
     obj_candidates = find_obj_candidates(obj_spec, DATASET_PATH, HASHBOOK_PATH, gt_file_name="train.json")
     retrieved_mesh_specs = pick_and_rescale_parts(obj_spec, obj_candidates, DATASET_PATH, gt_file_name="train.json")
 
-    # ============================ Load the meshes and save them as a GLB file
-
+    # ============================ Load the meshes and save them as a PLY file for each part
+    mesh_dir_name = f"{obj_name}_meshes"
+    os.makedirs(os.path.join(save_dir, mesh_dir_name), exist_ok=True)
     scene = trimesh.Scene()
     for i, mesh_spec in enumerate(retrieved_mesh_specs):
         part_spec = obj_spec["diffuse_tree"][i]
@@ -43,12 +47,19 @@ def retrieve_meshes(obj_spec, save_path):
                                                                 angles=[0, 0, np.radians(90) if mesh_spec["z_rotate_90"] else 0], 
                                                                 translate=part_spec["aabb"]["center"])
         part_mesh.apply_transform(transformation)
-
+        # Save the part mesh as a PLY file
+        part_mesh.export(os.path.join(save_dir, mesh_dir_name, f"part_{i}.ply"))
+        # Update object json
+        obj_spec["diffuse_tree"][i]["plys"] = [f"{mesh_dir_name}/part_{i}.ply"]
         # Add the mesh to the scene
         scene.add_geometry(part_mesh)
 
     # Export the scene as a PLY file
+    save_path = os.path.join(save_dir, f"{obj_name}.ply")
     scene.export(save_path)
+    # Export the updated json
+    with open(os.path.join(save_dir, f"{obj_name}.json"), "w") as f:
+        json.dump(obj_spec, f)
 
 def main(config, args):
 
@@ -59,7 +70,7 @@ def main(config, args):
     dm = datamodules.make(config.system.datamodule.name, config=config.system.datamodule)
     system = systems.make(config.system.name, config.system)
 
-    logger = TensorBoardLogger(save_dir=args.log_dir, name=config.name, version=config.version)
+    logger = TensorBoardLogger(save_dir='exps', name=config.name, version=config.version)
     callbacks = [ModelCheckpoint(**config.checkpoint), LearningRateMonitor(), ModelSummary(), ConfigSnapshotCallback(config)]
 
     trainer = pl.Trainer(devices='auto',
@@ -76,25 +87,40 @@ def main(config, args):
     trainer.predict(system, datamodule=dm, ckpt_path=args.ckpt)
 
     # ============================ Retreive meshes for each generated object
-
-    obj_spec_json_dir = os.path.join(args.log_dir, config.name, config.version, "images", "predict", 'ood')
+    obj_spec_json_dir = os.path.join('exps', config.name, config.version, "images", "predict", 'ood')
     for root, _, files in os.walk(obj_spec_json_dir, topdown=False):
         for file in files:
             if file.endswith(".json"):
-                obj_spec_json_path = os.path.join(root, file)
-                # Load the object spec json file
-                with open(obj_spec_json_path, "r") as f:
-                    obj_spec = json.load(f)
                 # Retrieve the meshes for the object and save them as a PLY file
                 fname = file.split(".")[0]
-                retrieve_meshes(obj_spec, save_path=f"{root}/{fname}.ply")
+                retrieve_meshes(fname, root)
 
 if __name__ == "__main__":
+    '''
+    This script runs prediction on a pre-trained model in an OOD mode.
+    The model predicts 10 samples by default for the input graph specified in the demo_graph.json.
+    For each generated object, the script retrieves the meshes for each part and records the object hierarchy in the json file.
+    All the saved files can be found in the "exps/cage/demo/images/predict" directory.
+
+    Pre-requisites:
+    - Since we rely on the training data to retrieve the meshes, the data should be present in the "<project folder>/data" directory already.
+    - Download the pre-trained.zip file and extract it in the "exps" directory.
+    - The file structure should look like this:
+        <project folder>
+            |-- data
+            |-- exps
+                |-- cage
+                    |-- demo
+                        |-- checkpoints
+                            |-- last.ckpt
+                        |-- config
+                            |-- parsed.yaml
+    '''
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="exps/denoiser_v2/head_4_layer_8/config/parsed.yaml")
-    parser.add_argument("--log_dir", type=str, default="exps")
-    parser.add_argument("--ckpt", default="exps/denoiser_v2/head_4_layer_8/checkpoints/last.ckpt", help="path to the trained weights")
-    parser.add_argument("--graph_json", default="demo_graph.json", help="path to the graph json file")
+    parser.add_argument("--config", type=str, default="exps/cage/demo/config/parsed.yaml",required=True, help="path to the config file")
+    parser.add_argument("--ckpt", default="exps/cage/demo/checkpoints/last.ckpt", required=True, help="path to the trained weights")
+    parser.add_argument("--input_graphs", default="demo_graph.json", help="path to the input graph json file")
+    parser.add_argument("--pred_n_samples", type=int, default=10, help="number of samples to generate for the input graph")
 
     pl.seed_everything(42)
     args, extras = parser.parse_known_args()
@@ -102,8 +128,9 @@ if __name__ == "__main__":
     config.cmd_args = vars(args)
 
     # ----- Edit to the config to use the input graph json
-    config.system.datamodule.pred_mode = "ood"              # Set to "ood" to use input graph json
-    config.system.datamodule.graph_json = args.graph_json   # Set to the path of the graph json file
+    config.system.datamodule.pred_mode = "ood"              # Set to "ood" prediction mode to use input graph json
+    config.system.datamodule.input_graphs = args.input_graphs   # Set to the path of the input graph json file
     config.system.datamodule.root = '../data'
+    config.system.datamodule.pred_n_samples = args.pred_n_samples
 
     main(config, args)
