@@ -165,18 +165,19 @@ class BaseDataset(Dataset):
         cond['n_nodes'] = n_nodes
 
         # attr mask (for Local Attention)
-        attr_mask = ~np.eye(K, K, dtype=bool)
+        attr_mask = np.eye(K, K, dtype=bool)
         attr_mask = attr_mask.repeat(5, axis=0).repeat(5, axis=1)
         cond['attr_mask'] = attr_mask
 
         # key padding mask (for Global Attention)
-        pad_mask = np.ones((K*5, K*5), dtype=bool)
-        pad_mask[:, :n_nodes*5] = 0
+        pad_mask = np.zeros((K*5, K*5), dtype=bool)
+        pad_mask[:, :n_nodes*5] = 1
         cond['key_pad_mask'] = pad_mask
 
         # adj mask (for Graph Relation Attention)
-        adj_mask = ~cond['adj'][:].astype(bool)
+        adj_mask = cond['adj'][:].astype(bool)
         adj_mask = adj_mask.repeat(5, axis=0).repeat(5, axis=1)
+        adj_mask[n_nodes*5:, :] = 1
         cond['adj_mask'] = adj_mask
 
         # axillary info

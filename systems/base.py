@@ -1,11 +1,13 @@
 import torch
 import models
+import trimesh
 import numpy as np
 import lightning.pytorch as pl
 from diffusers import DDPMScheduler
 from utils.savermixins import SaverMixin
 from utils.refs import sem_ref, joint_ref
 from utils.plot import viz_graph, make_grid, add_text
+from retrieval.obj_retrieval import find_obj_candidates, pick_and_rescale_parts
 from utils.render import rescale_axis, draw_boxes_axiss_anim, get_bbox_mesh_pair, get_axis_mesh
 
 class BaseSystem(pl.LightningModule, SaverMixin):
@@ -223,6 +225,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             self.save_rgb_image(f'uncond/{epoch}/#{b+offset}_thumbnail.png', thumbnail)
     
     def save_pred_cond_graph(self, pred, gt):
+        save_mesh = self.hparams.datamodule.pred_save_mesh
         epoch = self.trainer.current_epoch
         mode = self.hparams.datamodule.pred_mode
         x, c = gt
@@ -251,6 +254,8 @@ class BaseSystem(pl.LightningModule, SaverMixin):
             self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}/#{b}_thumbnail.png', thumbnail)
             
             thumbnails.append(thumbnail)
+            if save_mesh:
+                self.retrieve_meshes(pred_json, f'{mode}/{epoch}/{cat}/{hashcode}/#{b}.ply')
 
         thumbnails_grid = make_grid(thumbnails, cols=5)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{hashcode}_thumbnails.png', thumbnails_grid)
@@ -311,3 +316,40 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/thumbnails_graph.png', img_grid_g)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/thumbnails_semantic.png', img_grid_s)
         self.save_rgb_image(f'{mode}/{epoch}/{cat}/{model_name}/thumbnails_jtype.png', img_grid_j)
+    
+    def retrieve_meshes(self, obj_spec, save_path):
+        DATASET_PATH = self.hparams.datamodule.root
+        HASHBOOK_PATH = "./retrieval/retrieval_hash_no_handles.json"
+        # Retrieve meshes for the object
+        obj_candidates = find_obj_candidates(obj_spec, DATASET_PATH, HASHBOOK_PATH, gt_file_name="train.json")
+        retrieved_mesh_specs = pick_and_rescale_parts(obj_spec, obj_candidates, DATASET_PATH, gt_file_name="train.json")
+
+        # ============================ Load the meshes and save them as a GLB file
+
+        scene = trimesh.Scene()
+        for i, mesh_spec in enumerate(retrieved_mesh_specs):
+            part_spec = obj_spec["diffuse_tree"][i]
+
+            # A part may be composed of multiple meshes
+            part_meshes = []
+            for file in mesh_spec["files"]:
+                mesh = trimesh.load(os.path.join(mesh_spec["dir"], file), force="mesh")
+                part_meshes.append(mesh)
+            part_mesh = trimesh.util.concatenate(part_meshes)
+            
+            # Center the mesh at the origin
+            part_mesh.vertices -= part_mesh.bounding_box.centroid
+
+            # Rotate the mesh 90 degrees about the z-axis if specified
+            if mesh_spec["z_rotate_90"]:
+                part_mesh.apply_transform(trimesh.transformations.rotation_matrix(np.radians(90), [0, 0, 1]))
+
+            # Scale and position the mesh
+            transform_matrix = trimesh.transformations.scale_and_translate(mesh_spec["scale_factor"], part_spec["aabb"]["center"])
+            part_mesh.apply_transform(transform_matrix)
+
+            # Add the mesh to the scene
+            scene.add_geometry(part_mesh)
+
+        # Export the scene as a PLY file
+        scene.export(save_path)

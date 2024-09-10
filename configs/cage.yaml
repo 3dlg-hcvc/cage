@@ -15,6 +15,7 @@ system:
     hash_table: indexes/hash_table.json # for pred mode
     pred_mode: cond_graph # cond_graph, cond_type, cond_axis, cond_box, cond_label
     pred_n_samples: 10 # the number of samples to generate for each condition
+    pred_save_mesh: false # save the retrieved meshes of the generated samples
     
   model:
     name: denoiser
