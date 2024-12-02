@@ -35,6 +35,8 @@ conda install pytorch3d -c pytorch3d
 ## Data
 We share the training data ([here](https://aspis.cmpt.sfu.ca/projects/cage/data.zip)~101MB) preprocessed from [PartNet-Mobility](https://sapien.ucsd.edu/browse) dataset. Once downloaded, extract the `data` and put it directly in the project folder. The data root can be configured with `system.datamodule.root=<path/to/your/data/directory>` in `configs/cage.yaml` file. If you find it slow to download the data from our server, please try this alternative link on [OneDrive](https://1sfu-my.sharepoint.com/:u:/g/personal/jla861_sfu_ca/EVFoahRzu4hMpQiGi4OsDbYBU170oPAjvWa02iohyj5sTg?e=qnBra3).
 
+The preprocessing script can be found in `preprocess.py`. We use this script to process the selective categories of objects used in our experiments.
+
 ## Quick Demo
 We share the pretrained model ([here](https://aspis.cmpt.sfu.ca/projects/cage/pre-trained.zip)~80MB) so you can try our demo real quick. Once downloaded, extract the zip file and put it under `<project folder>/exps` folder. Since our part retrieval relies on the meshes in the dataset, the data should be already downloaded and put under the project folder by default. Run `python demo.py` to start the demo (with a single GPU is preferred). Please see `demo.py` for further instructions on the script arguments.
 
