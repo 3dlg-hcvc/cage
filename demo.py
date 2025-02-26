@@ -16,6 +16,7 @@ from retrieval.obj_retrieval import find_obj_candidates, pick_and_rescale_parts
 from utils.misc import load_config
 
 def retrieve_meshes(obj_name, save_dir, dataset_path="./data"):
+    print(f"Retrieving meshes for {obj_name}...")
     # Load the object spec json file
     with open(os.path.join(save_dir, f"{obj_name}.json"), "r") as f:
         obj_spec = json.load(f)
@@ -90,7 +91,7 @@ def main(config, args):
     obj_spec_json_dir = os.path.join('exps', config.name, config.version, "images", "predict", 'ood')
     for root, _, files in os.walk(obj_spec_json_dir, topdown=False):
         for file in files:
-            if file.endswith(".json"):
+            if file.endswith(".json") and file.startswith("#"):
                 # Retrieve the meshes for the object and save them as a PLY file
                 fname = file.split(".")[0]
                 retrieve_meshes(fname, root, dataset_path=args.data_root)

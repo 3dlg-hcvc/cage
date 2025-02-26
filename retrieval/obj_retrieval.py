@@ -117,7 +117,8 @@ def find_obj_candidates(requirement_dict, dataset_dir, hashbook_path, num_states
         hashbook = json.load(f)
 
     # Resolve paths to directories
-    requirement_category = requirement_dict["meta"]["obj_cat"]
+    # requirement_category = requirement_dict["meta"]["obj_cat"]
+    requirement_category = requirement_dict.get("meta", "").get("obj_cat", "")
     category_specified = requirement_category != ""
     dataset_dir = os.path.abspath(dataset_dir)
     if category_specified:
